@@ -1402,6 +1402,58 @@ class RuleBasedCustomerClusterer:
         self.X_ = X
         return X
 
+    def build_customer_rule_matrix(
+        self,
+        rules_df: pd.DataFrame | None = None,
+        weighting: str = "none",
+        min_antecedent_len: int = 1,
+    ) -> np.ndarray:
+        """Build Customer × Rule activation matrix (helper for profiling).
+        
+        If rules_df is provided, temporarily use it. Otherwise use self.rules_df_.
+        Returns a matrix where entry [i, j] indicates how much customer i satisfies rule j.
+        """
+        if self.customer_item_bool is None:
+            self.build_customer_item_matrix()
+
+        if rules_df is not None:
+            rules = rules_df.copy()
+        elif self.rules_df_ is None:
+            raise ValueError("Chưa load rules. Hãy gọi load_rules() hoặc truyền rules_df trước.")
+        else:
+            rules = self.rules_df_.copy()
+
+        customer_item = self.customer_item_bool
+        n_customers = customer_item.shape[0]
+        n_rules = rules.shape[0]
+        X = np.zeros((n_customers, n_rules), dtype=np.float32)
+
+        item_cols = set(customer_item.columns.astype(str))
+
+        for j, row in rules.iterrows():
+            ants = self._parse_items(row.get("antecedents_str", ""))
+            if len(ants) < min_antecedent_len:
+                continue
+
+            if any(a not in item_cols for a in ants):
+                continue
+
+            mask = customer_item[ants].all(axis=1).astype(np.float32).values
+
+            w = 1.0
+            if weighting == "lift" and "lift" in row:
+                w = float(row["lift"])
+            elif weighting == "confidence" and "confidence" in row:
+                w = float(row["confidence"])
+            elif weighting == "support" and "support" in row:
+                w = float(row["support"])
+            elif weighting == "lift_x_conf" and ("lift" in row) and ("confidence" in row):
+                w = float(row["lift"]) * float(row["confidence"])
+
+            X[:, j] = mask * w
+
+        return X
+
     def compute_rfm(self, snapshot_date=None) -> pd.DataFrame:
         """Tính RFM trực tiếp từ df_clean (tương tự DataCleaner.compute_rfm)."""
         df = self.df.copy()
