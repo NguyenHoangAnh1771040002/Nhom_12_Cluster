@@ -89,6 +89,55 @@ TOP_K_RULES = 200         # Số luật sử dụng cho phân cụm
 SORT_BY = "lift"          # Sắp xếp theo lift
 ```
 
+### 🔢 Giải thích Top-K Rules
+
+#### Top-K Rules là gì?
+**Top-K Rules** là việc chọn **K luật kết hợp có chất lượng cao nhất** (theo lift/confidence) để làm đặc trưng cho phân cụm khách hàng.
+
+```
+Tổng số luật sau Apriori: ~1,800 luật
+        ↓ Sắp xếp theo lift giảm dần
+        ↓ Lấy Top-K = 200 luật
+Số luật dùng cho clustering: 200 luật
+```
+
+#### Tại sao cần chọn Top-K?
+| Lý do | Giải thích |
+|-------|------------|
+| **Giảm chiều dữ liệu** | 1,800 luật → 200 features (giảm 89%) |
+| **Loại bỏ noise** | Các luật lift thấp ít có ý nghĩa |
+| **Tăng tốc K-Means** | Ít features → tính toán nhanh hơn |
+| **Tập trung vào luật mạnh** | Lift cao = mối quan hệ thực sự |
+
+#### Tại sao chọn K = 200?
+
+Việc chọn **Top-K = 200** dựa trên các cân nhắc sau:
+
+| Tiêu chí | K = 50 | K = 100 | **K = 200** | K = 500 |
+|----------|--------|---------|-------------|---------|
+| Coverage (% sản phẩm) | Thấp | Trung bình | **Tốt** | Rất cao |
+| Lift trung bình | Rất cao | Cao | **Cao** | Trung bình |
+| Feature sparsity | Rất thưa | Thưa | **Cân bằng** | Dày đặc |
+| Overfitting risk | Cao | Trung bình | **Thấp** | Rất thấp |
+| Interpretability | Rất dễ | Dễ | **Dễ** | Khó |
+
+**Kết luận:** K = 200 là **điểm cân bằng** giữa:
+- Đủ nhiều luật để capture các pattern khác nhau
+- Đủ ít để giữ các luật có lift cao (chất lượng tốt)
+- Phù hợp với quy mô ~3,900 khách hàng
+
+#### Ảnh hưởng của Top-K đến phân cụm
+
+```
+K nhỏ (50):   Ít features → Cụm đơn giản, có thể bỏ sót pattern
+K vừa (200):  Cân bằng → Cụm có ý nghĩa, lift cao
+K lớn (500): Nhiều features → Cụm phức tạp, nhiều noise
+```
+
+> **Lưu ý:** Trong dự án này, Top-K = 200 được giữ cố định cho tất cả variants để so sánh công bằng. Có thể thử nghiệm thêm các giá trị K khác để tối ưu.
+
+---
+
 ### Top 10 Luật Tiêu Biểu (theo Lift)
 
 | # | Antecedent | Consequent | Support | Confidence | Lift |
