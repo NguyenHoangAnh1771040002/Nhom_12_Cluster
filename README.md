@@ -44,17 +44,8 @@ Thay vì chỉ nhìn vào **"khách mua nhiều hay ít"**, ta muốn biết **"
 
 ## 2. Quy trình Thực hiện
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  1. Tiền xử lý  │ →  │ 2. Khai phá     │ →  │ 3. Feature      │
-│     Dữ liệu     │    │    Luật (Rules) │    │    Engineering  │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                                                      ↓
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  6. Chiến lược  │ ←  │ 5. Diễn giải    │ ←  │ 4. Phân cụm     │
-│     Marketing   │    │    & Profiling  │    │    K-Means      │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
+![Pipeline](images/pipeline.png)
+*Hình 1: Pipeline phân cụm khách hàng dựa trên luật kết hợp*
 
 **Chi tiết các bước:**
 1. **Tiền xử lý:** Làm sạch dữ liệu (loại hóa đơn hủy, số lượng âm, giá trị rỗng)
@@ -115,6 +106,14 @@ SORT_BY = "lift"          # Sắp xếp theo lift
 
 **Nhận xét:** Các luật có lift rất cao (>70) cho thấy mối quan hệ mạnh giữa các sản phẩm trong bộ HERB MARKER - đây là nhóm sản phẩm thường được mua cùng nhau.
 
+### Trực quan hóa Top Rules
+
+![Top Rules by Lift](images/top_rules_lift.png)
+*Hình 2: Top 15 luật kết hợp theo Lift*
+
+![Rules Scatter](images/rules_scatter.png)
+*Hình 3: Phân bố luật - Support vs Confidence (màu = Lift)*
+
 ---
 
 ## 5. Feature Engineering - So Sánh Biến Thể
@@ -165,20 +164,35 @@ SORT_BY = "lift"          # Sắp xếp theo lift
 
 ## 7. Trực quan hóa (Visualization)
 
-### Hình 1: PCA 2D Projection - Phân bố cụm khách hàng
-*Biểu đồ scatter plot hiển thị khách hàng được giảm chiều xuống 2D bằng PCA, tô màu theo cluster.*
+### Hình 4: Phân bố khách hàng theo cụm
+
+![Cluster Distribution](images/cluster_distribution.png)
+*Hình 4: Phân bố số lượng khách hàng theo cụm*
 
 **Nhận xét:**
-- Cụm 0 (Regular Customers) chiếm phần lớn, phân bố rộng
-- Cụm 1 (Champions) tách biệt rõ ràng, tập trung hơn
+- Cụm 0 (Regular Customers) chiếm **96.8%** - đại đa số khách hàng
+- Cụm 1 (Champions) chỉ **3.2%** - nhóm VIP quý hiếm
+- Đây là phân bố điển hình của quy luật 80/20 (Pareto)
+
+### Hình 5: PCA 2D Projection - Phân bố cụm khách hàng
+
+![PCA Clusters](images/pca_clusters.png)
+*Hình 5: PCA 2D Projection - Trực quan hóa phân bố cụm*
+
+**Nhận xét:**
+- Cụm 0 (Regular Customers - màu xanh) chiếm phần lớn, phân bố rộng
+- Cụm 1 (Champions - màu đỏ) tách biệt rõ ràng, tập trung hơn
 - Hai cụm có sự phân tách tương đối tốt, không chồng lấn nhiều
 
-### Hình 2: So sánh Silhouette Score giữa các Variant
-*Bar chart so sánh Silhouette score của 5 biến thể feature engineering.*
+### Hình 6: So sánh RFM giữa các cụm
+
+![RFM Comparison](images/rfm_comparison.png)
+*Hình 6: So sánh chỉ số RFM trung bình giữa các cụm*
 
 **Nhận xét:**
-- Binary Rules Only có score cao nhất (~0.95) nhưng tạo cụm quá mất cân bằng
-- Weighted Rules + RFM cân bằng giữa chất lượng cụm và ý nghĩa kinh doanh
+- Champions có Recency thấp hơn (60 vs 93 ngày) → mua gần đây hơn
+- Champions có Frequency cao gấp 5 lần (21 vs 4 đơn)
+- Champions có Monetary cao gấp 10 lần (£17,365 vs £1,809)
 
 ---
 
@@ -190,6 +204,16 @@ SORT_BY = "lift"          # Sắp xếp theo lift
 |---------|--------|--------|-------|--------|------------|--------------|-------------|
 | 0 | Regular Customers | Khách hàng thông thường | 3,797 | 96.8% | 93.2 ngày | 4.1 đơn | £1,809 |
 | 1 | Champions | Khách hàng VIP | 124 | 3.2% | 60.5 ngày | 21.3 đơn | £17,365 |
+
+### Hình 7: So sánh Profile cụm (chuẩn hóa)
+
+![Cluster Profile](images/cluster_profile.png)
+*Hình 7: So sánh profile cụm trên các chỉ số chuẩn hóa*
+
+### Hình 8: Phân phối RFM theo cụm
+
+![RFM Distributions](images/rfm_distributions.png)
+*Hình 8: Histogram phân phối Recency, Frequency, Monetary theo từng cụm*
 
 ### Chi tiết từng cụm
 
